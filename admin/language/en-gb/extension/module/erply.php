@@ -1,10 +1,10 @@
 <?php
 $_['heading_title']    = 'Erply';
- 
+
 $_['text_module']      = 'Modules';
 $_['text_success']     = 'Success: You have modified "Erply" module!';
 $_['text_edit']        = 'Edit "Erply" Module';
- 
+
 // Entry
 $_['entry_status']     = 'Status';
 $_['entry_client_code']= 'Client Code';
@@ -20,7 +20,7 @@ $_['entry_cleaning']   = 'Cleaning...';
 $_['entry_resetting']   = 'Resetting...';
 
 $_['entry_sync_complete']   = 'Done!';
- 
+
 // Error
 $_['error_user'] = 'Error: username is required!';
 $_['error_password'] = 'Error: password is required!';

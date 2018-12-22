@@ -39,72 +39,72 @@
               </select>
             </div>
           </div>
-		  <div class="form-group required">
+      <div class="form-group required">
             <label class="col-sm-2 control-label" for="entry-client_code">{{ entry_client_code }}</label>
             <div class="col-sm-10">
               <input type="text" name="module_erply_client_code" value="{{ module_erply_client_code }}" placeholder="{{ entry_client_code }}" id="entry-client_code" class="form-control"/>
             </div>
-			{% if error_client_code %}
+      {% if error_client_code %}
               <div class="text-danger">{{ error_client_code }}</div>
-			{% endif %}
+      {% endif %}
           </div>
-		  <div class="form-group required">
+      <div class="form-group required">
             <label class="col-sm-2 control-label" for="entry-user">{{ entry_user }}</label>
             <div class="col-sm-10">
               <input type="text" name="module_erply_user" value="{{ module_erply_user }}" placeholder="{{ entry_user }}" id="entry-user" class="form-control"/>
             </div>
-			{% if error_user %}
+      {% if error_user %}
               <div class="text-danger">{{ error_user }}</div>
-			{% endif %}
+      {% endif %}
           </div>
-		  <div class="form-group required">
+      <div class="form-group required">
             <label class="col-sm-2 control-label" for="entry-password">{{ entry_password }}</label>
             <div class="col-sm-10">
               <input type="password" name="module_erply_password" value="" placeholder="{{ entry_password }}" id="entry-password" class="form-control"/>
             </div>
-			{% if error_password %}
+      {% if error_password %}
               <div class="text-danger">{{ error_password }}</div>
-			{% endif %}
+      {% endif %}
           </div>
         </form>
-		<div style="width: 50%; margin: auto;">
-			<ul style="list-style: none">
-				<li style="margin: 10px;">
-					<button type="button" id="button-sync" data-url="{{ sync_url | raw }}" data-loading-text="{{ entry_syncing }}" class="btn btn-primary btn-lg btn-block">{{ entry_sync }}</button>
-				</li>
-				<li style="margin: 10px;">
-					<button type="button" id="button-clean" data-url="{{ clean_url | raw }}" data-loading-text="{{ entry_cleaning }}" class="btn btn-primary btn-lg btn-block">{{ entry_clean }}</button>
-				</li>
-				<!--<li style="margin: 10px;">
-					<button type="button" id="button-reset" data-loading-text="{{ entry_resetting }}" class="btn btn-primary btn-lg btn-block">{{ entry_reset }}</button>
-				</li>-->
-			</ul>
-		</div>
+    <div style="width: 50%; margin: auto;">
+      <ul style="list-style: none">
+        <li style="margin: 10px;">
+          <button type="button" id="button-sync" data-url="{{ sync_url | raw }}" data-loading-text="{{ entry_syncing }}" class="btn btn-primary btn-lg btn-block">{{ entry_sync }}</button>
+        </li>
+        <li style="margin: 10px;">
+          <button type="button" id="button-clean" data-url="{{ clean_url | raw }}" data-loading-text="{{ entry_cleaning }}" class="btn btn-primary btn-lg btn-block">{{ entry_clean }}</button>
+        </li>
+        <!--<li style="margin: 10px;">
+          <button type="button" id="button-reset" data-loading-text="{{ entry_resetting }}" class="btn btn-primary btn-lg btn-block">{{ entry_reset }}</button>
+        </li>-->
+      </ul>
+    </div>
       </div>
     </div>
   </div>
 </div>
 <script>
-	var syncCompleteText = "{{ entry_sync_complete }}";
-	jQuery("#button-sync").click(function(e){
-		var btn = $(this);
+  var syncCompleteText = "{{ entry_sync_complete }}";
+  jQuery("#button-sync").click(function(e){
+    var btn = $(this);
         btn.button('loading');
-		
-		jQuery.post(btn.attr("data-url"), function(data){
-			btn.button('reset');
-			alert(syncCompleteText);
-		});
-	});
-	
-	var cleanCompleteText = "{{ entry_clean_complete }}";
-	jQuery("#button-clean").click(function(e){
-		var btn = $(this);
+    
+    jQuery.post(btn.attr("data-url"), function(data){
+      btn.button('reset');
+      alert(syncCompleteText);
+    });
+  });
+  
+  var cleanCompleteText = "{{ entry_clean_complete }}";
+  jQuery("#button-clean").click(function(e){
+    var btn = $(this);
         btn.button('loading');
-		
-		jQuery.post(btn.attr("data-url"), function(data){
-			btn.button('reset');
-			alert(cleanCompleteText);
-		});
-	});
+    
+    jQuery.post(btn.attr("data-url"), function(data){
+      btn.button('reset');
+      alert(cleanCompleteText);
+    });
+  });
 </script>
 {{ footer }}

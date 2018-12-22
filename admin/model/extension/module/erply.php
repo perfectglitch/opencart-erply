@@ -4,20 +4,20 @@ class ModelExtensionModuleErply extends Model {
 	public function install() {
 		$this->db->query("
 			CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "erply_oc_product` (
-			  `oc_product_id` int(11) NOT NULL ,
-			  `erply_product_id` int(11) NOT NULL ,
-			  `timestamp` int(11) NOT NULL,
-			  UNIQUE(`oc_product_id`),
-			  UNIQUE(`erply_product_id`)
+			`oc_product_id` int(11) NOT NULL ,
+			`erply_product_id` int(11) NOT NULL ,
+			`timestamp` int(11) NOT NULL,
+			UNIQUE(`oc_product_id`),
+			UNIQUE(`erply_product_id`)
 		) DEFAULT COLLATE=utf8_general_ci;");
 
 		$this->db->query("
 			CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "erply_oc_category` (
-			  `oc_category_id` int(11) NOT NULL ,
-			  `erply_category_id` int(11) NOT NULL ,
-			  `timestamp` int(11) NOT NULL,
-			  UNIQUE(`oc_category_id`),
-			  UNIQUE(`erply_category_id`)
+			`oc_category_id` int(11) NOT NULL ,
+			`erply_category_id` int(11) NOT NULL ,
+			`timestamp` int(11) NOT NULL,
+			UNIQUE(`oc_category_id`),
+			UNIQUE(`erply_category_id`)
 		) DEFAULT COLLATE=utf8_general_ci;");
 	}
 
