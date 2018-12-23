@@ -1,4 +1,8 @@
 <?php
+
+/**
+ * API helper provided by Erply.
+ */
 class EAPI
 {
 	const VERIFY_USER_FAILURE = 2001;

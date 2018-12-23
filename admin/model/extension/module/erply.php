@@ -95,7 +95,7 @@ class ModelExtensionModuleErply extends Model {
 			// Check if image already exists
 			foreach ($db_images as $db_image){
 				if($db_image['image'] == $image){
-					// break outer loop
+					continue 2;
 				}
 			}
 			
