@@ -3,12 +3,13 @@ class OcErplyHelper
 {
 	private static $file_prefix = "ERPLY_IMAGE";
 
-    public function __construct()
+	public function __construct()
 	{
 
-    }
+	}
 
-    public function erply_to_oc_category($erply_category, $parent_id){
+	public function erply_to_oc_category($erply_category, $parent_id)
+	{
 		$oc_category = array(
 			'parent_id' => isset($parent_id) ? $parent_id : 0,
 			'top' => isset($parent_id) ? 0 : 1,
@@ -19,7 +20,7 @@ class OcErplyHelper
 			'category_seo_url' => array(array(), array())
 		);
 
-		if(isset($erply_category['subGroups']) && !empty($erply_category['subGroups'])){
+		if (isset($erply_category['subGroups']) && !empty($erply_category['subGroups'])) {
 
 			$oc_category['column'] = $this->get_category_column_count(sizeof($erply_category['subGroups']));
 
@@ -28,14 +29,14 @@ class OcErplyHelper
 			$oc_category['column'] = 1;
 		}
 
-        // 2 languages
+		// 2 languages
 		$oc_category['category_description'] = array(
 			1 => array(
-                'name' => $erply_category['name'],
-                'description' => '',
-                'meta_title' => $erply_category['name'],
-                'meta_description' => '',
-                'meta_keyword' => ''
+				'name' => $erply_category['name'],
+				'description' => '',
+				'meta_title' => $erply_category['name'],
+				'meta_description' => '',
+				'meta_keyword' => ''
 			),
 			2 => array(
 				'name' => $erply_category['name'],
@@ -45,11 +46,12 @@ class OcErplyHelper
 				'meta_keyword' => ''
 			)
 		);
-		
-		return $oc_category;
-    }
 
-    private function erply_to_oc_product($erply_product, $oc_category_id){
+		return $oc_category;
+	}
+
+	private function erply_to_oc_product($erply_product, $oc_category_id)
+	{
 		$oc_product = array(
 			'model' => $erply_product['code'],
 			'sku' => $erply_product['unitName'],
@@ -84,7 +86,7 @@ class OcErplyHelper
 		);
 
 		$oc_product['product_image'] = array();
-		
+
 		$oc_product['product_description'] = array(
 			1 => array(
 				'name' => $erply_product['name'],
@@ -103,54 +105,56 @@ class OcErplyHelper
 				'tag' => ''
 			)
 		);
-		
+
 		return $oc_product;
-    }
-    
-    private function download_product_images($erply_product){
-		if(!isset($erply_product['images'])){
+	}
+
+	private function download_product_images($erply_product)
+	{
+		if (!isset($erply_product['images'])) {
 			return array();
 		}
-		
+
 		$images = array();
-		
+
 		$erply_dir = 'erply_images';
 		$fs_base_dir = DIR_IMAGE . 'catalog/' . $erply_dir;
 		$db_base_dir = 'catalog/' . $erply_dir;
-		
+
 		if (!file_exists($fs_base_dir)) {
 			mkdir($fs_base_dir, 0777, true);
 		}
-				
-		foreach ($erply_product['images'] as $erply_image){
+
+		foreach ($erply_product['images'] as $erply_image) {
 			$url = $erply_image['fullURL'];
-			
+
 			$file_extension = pathinfo(parse_url($url)['path'], PATHINFO_EXTENSION);
 			$file_name = self::$file_prefix . '_' . $erply_product['productID'] . '_' . $erply_image['pictureID'] . '.' . $file_extension;
 			$file_local_path = $fs_base_dir . '/' . $file_name;
-						
-			if(!file_exists ($file_name)){
+
+			if (!file_exists($file_name)) {
 				$content = file_get_contents($url);
 				file_put_contents($file_local_path, $content);
 				$images[] = ($db_base_dir . '/' . $file_name);
 			}
 		}
-		
+
 		return $images;
 	}
-    
-    private function get_category_column_count($sub_category_count){			
-		if($sub_category_count > 30){
+
+	private function get_category_column_count($sub_category_count)
+	{
+		if ($sub_category_count > 30) {
 			$columns = 4;
-		} else if($sub_category_count > 20){
+		} else if ($sub_category_count > 20) {
 			$columns = 3;
-		} else if($sub_category_count > 10){
+		} else if ($sub_category_count > 10) {
 			$columns = 2;
 		}
 		
 		// TODO: add logging support to this helper class
 		//$this->debug("@get_category_column_count for " . $sub_category_count . " categories returning " . (isset($columns) ? $columns : 1) . " columns");
-		
+
 		return isset($columns) ? $columns : 1;
 	}
 }
