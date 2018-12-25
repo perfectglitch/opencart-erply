@@ -37,69 +37,25 @@ class ControllerExtensionModuleErply extends Controller {
 			$this->session->data['success'] = $this->language->get('text_success');
 			$this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true));
 		}
+        
+        $this->handle_errors($data);
+        $this->add_texts($data);
+        $this->add_breadcrumbs($data);
+        $this->populate_module_settings($data);
 		
-		$data['heading_title'] = $this->language->get('heading_title');
-
-		$data['text_edit'] = $this->language->get('text_edit');
-		$data['text_enabled'] = $this->language->get('text_enabled');
-		$data['text_disabled'] = $this->language->get('text_disabled');
-
-		$data['entry_status'] = $this->language->get('entry_status');
-		$data['entry_user'] = $this->language->get('entry_user');
-		$data['entry_password'] = $this->language->get('entry_password');
-		$data['entry_client_code'] = $this->language->get('entry_client_code');
-
-		$data['button_save'] = $this->language->get('button_save');
-		$data['button_cancel'] = $this->language->get('button_cancel');
-
-		$data['button_add_module'] = $this->language->get('button_add_module');
-		$data['button_remove'] = $this->language->get('button_remove');
-
-		if (isset($this->error['warning'])) {
-			$data['error_warning'] = $this->error['warning'];
-		} else {
-			$data['error_warning'] = '';
-		}
-
-		if (isset($this->error['user'])) {
-			$data['error_user'] = $this->error['user'];
-		} else {
-			$data['error_user'] = '';
-		}
-		if (isset($this->error['password'])) {
-			$data['error_password'] = $this->error['password'];
-		} else {
-			$data['error_password'] = '';
-		}
-		if (isset($this->error['client_code'])) {
-			$data['error_client_code'] = $this->error['code'];
-		} else {
-			$data['error_client_code'] = '';
-		}
-
-		$data['breadcrumbs'] = array();
-
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
-		);
-
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_extension'),
-			'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true)
-		);
-
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('extension/module/erply', 'user_token=' . $this->session->data['user_token'], true)
-		);
-
 		$data['action'] = $this->url->link('extension/module/erply', 'user_token=' . $this->session->data['user_token'], true);
 		$data['sync_url'] = $this->url->link('extension/module/erply/sync', 'user_token=' . $this->session->data['user_token'], true);
 		$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
 
+		$data['header'] = $this->load->controller('common/header');
+		$data['column_left'] = $this->load->controller('common/column_left');
+		$data['footer'] = $this->load->controller('common/footer');
 
-		if (isset($this->request->post['module_erply_status'])) {
+		$this->response->setOutput($this->load->view('extension/module/erply', $data));
+    }
+
+    private function populate_module_settings(&$data){
+        if (isset($this->request->post['module_erply_status'])) {
 			$data['module_erply_status'] = $this->request->post['module_erply_status'];
 		} else {
 			$data['module_erply_status'] = $this->config->get('module_erply_status');
@@ -120,13 +76,68 @@ class ControllerExtensionModuleErply extends Controller {
 		} else {
 			$data['module_erply_client_code'] = $this->config->get('module_erply_client_code');
 		}
+    }
 
-		$data['header'] = $this->load->controller('common/header');
-		$data['column_left'] = $this->load->controller('common/column_left');
-		$data['footer'] = $this->load->controller('common/footer');
+    private function add_breadcrumbs(&$data){
+        $data['breadcrumbs'] = array();
 
-		$this->response->setOutput($this->load->view('extension/module/erply', $data));
-	}
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('text_home'),
+			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
+		);
+
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('text_extension'),
+			'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true)
+		);
+
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('heading_title'),
+			'href' => $this->url->link('extension/module/erply', 'user_token=' . $this->session->data['user_token'], true)
+		);
+    }
+    
+    private function add_texts(&$data){
+        $data['heading_title'] = $this->language->get('heading_title');
+
+		$data['text_edit'] = $this->language->get('text_edit');
+		$data['text_enabled'] = $this->language->get('text_enabled');
+		$data['text_disabled'] = $this->language->get('text_disabled');
+
+		$data['entry_status'] = $this->language->get('entry_status');
+		$data['entry_user'] = $this->language->get('entry_user');
+		$data['entry_password'] = $this->language->get('entry_password');
+		$data['entry_client_code'] = $this->language->get('entry_client_code');
+
+		$data['button_save'] = $this->language->get('button_save');
+		$data['button_cancel'] = $this->language->get('button_cancel');
+
+		$data['button_add_module'] = $this->language->get('button_add_module');
+		$data['button_remove'] = $this->language->get('button_remove');
+    }
+    
+    private function handle_errors(&$data){
+        if (isset($this->error['warning'])) {
+			$data['error_warning'] = $this->error['warning'];
+		} else {
+			$data['error_warning'] = '';
+		}
+		if (isset($this->error['user'])) {
+			$data['error_user'] = $this->error['user'];
+		} else {
+			$data['error_user'] = '';
+		}
+		if (isset($this->error['password'])) {
+			$data['error_password'] = $this->error['password'];
+		} else {
+			$data['error_password'] = '';
+		}
+		if (isset($this->error['client_code'])) {
+			$data['error_client_code'] = $this->error['code'];
+		} else {
+			$data['error_client_code'] = '';
+		}
+    }
 
 	public function sync(){
 		$this->load->model('extension/module/erply');
@@ -158,8 +169,8 @@ class ControllerExtensionModuleErply extends Controller {
 		} finally {
 			$this->sync_lock = 0;
 		}
-	}
-
+    }
+    
 	private function ensure_module_enabled(){
 		if(!$this->config->get('module_erply_status')){
 			// TODO: error handling
