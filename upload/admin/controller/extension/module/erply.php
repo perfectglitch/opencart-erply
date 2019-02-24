@@ -10,7 +10,7 @@ class ControllerExtensionModuleErply extends Controller
 	private $erplyHelper;
 
 	private static $sync_lock = 0;
-	private static $debug_enabled = 0;
+	private static $debug_enabled = 1;
 
 	public function install()
 	{
@@ -157,49 +157,41 @@ class ControllerExtensionModuleErply extends Controller
 
 	public function sync()
 	{
-		$this->load->model('extension/module/erply');
-		$this->load->model('setting/setting');
-		$this->load->model('catalog/category');
-		$this->load->model('catalog/product');
-
-		// TODO: can this be moved up?
-		$this->ensure_module_enabled();
-		$this->check_permissions();
-
-		$this->load->library('ErplyApi');
-		$this->load->library('OcErplyHelper');
-
-		$this->erplyHelper = new OcErplyHelper();
+		if ($this->sync_lock == 0) {
+			$this->sync_lock = 1;
+		} else {
+			die();
+		}
 
 		try {
-			if ($this->sync_lock == 0) {
-				$this->sync_lock = 1;
+			$this->init_sync();
 
-				$this->init_erply(
-					$this->config->get('module_erply_user'),
-					$this->config->get('module_erply_password'),
-					$this->config->get('module_erply_client_code')
-				);
-			} else {
-				// TODO: error handling
-			}
+			$this->delete_removed_categories();
+			$this->delete_removed_products();
+			$this->sync_categories();
 		}
 		finally {
 			$this->sync_lock = 0;
 		}
 	}
 
-	private function ensure_module_enabled()
-	{
-		if (!$this->config->get('module_erply_status')) {
-			// TODO: error handling
-			die();
-		}
-	}
-
 	private function sync_categories()
 	{
-		$categories_response = json_decode($this->erply->sendRequest('getProductGroups', array('displayedInWebshop' => 1)), true);
+		$categories_response = json_decode(
+			$this->erply->sendRequest(
+				'getProductGroups',
+				array(
+					'displayedInWebshop' => 1
+					//'getAllLanguages' => 1
+				)
+			),
+			true
+		);
+
+		if ($categories_response['status']['responseStatus'] == 'error') {
+			throw new Exception("Error in Erply response");
+		}
+
 		$erply_categories = $categories_response['records'];
 
 		foreach ($erply_categories as $erply_category) {
@@ -255,28 +247,36 @@ class ControllerExtensionModuleErply extends Controller
 	{
 		$this->debug("@sync_products creating products for category with id " . $oc_category_id);
 
-		$products_response = json_decode(
-			$this->erply->sendRequest('getProducts', array(
-				'groupID' => $erply_category_id,
-				'displayedInWebshop' => 1,
-				'getStockInfo' => 1,
-				'active' => 1,
-				'getPriceListPrices' => 1,
-				'type' => 'PRODUCT,BUNDLE,ASSEMBLY' // ensures no matrix product parents in response
-			)),
-			true
-		);
+		$offset = 0;
+		$erply_products = array();
 
-		$erply_products = $products_response['records'];
+		$erply_response = $this->erply->get_products($offset, 100, 1, 1, null, $erply_category_id);
+
+		if ($erply_response['status']['responseStatus'] == 'error') {
+			throw new Exception("Error in Erply response");
+		}
+
+		$erply_products = $erply_response['records'];
+
+		while ($offset < $erply_response['status']['recordsTotal']) {
+			$offset += 100;
+			$erply_response = $this->erply->get_products($offset, 100, 1, 1, null, $erply_category_id);
+
+			if ($erply_response['status']['responseStatus'] == 'error') {
+				throw new Exception("Error in Erply response");
+			}
+
+			$erply_products = array_merge($erply_products, $erply_response['records']);
+		}
 
 		foreach ($erply_products as $erply_product) {
-			$this->sync_product($erply_product);
+			$this->sync_product($erply_product, $oc_category_id);
 		}
 
 		return sizeof($erply_products);
 	}
 
-	private function sync_product($erply_product)
+	private function sync_product($erply_product, $oc_category_id)
 	{
 		$mapping = $this->model_extension_module_erply->find_product_mapping_by_erply_id($erply_product['productID']);
 
@@ -287,6 +287,13 @@ class ControllerExtensionModuleErply extends Controller
 
 			if ($oc_db_product) {
 				$this->debug("@sync_products mapping for product " . $erply_product['productID'] . " already exists, updating product!");
+
+				$oc_product_categories = $this->model_catalog_product->getProductCategories($oc_db_product['product_id']);
+				if (!in_array($oc_category_id, $oc_product_categories)) {
+					// TODO: support multiple categories
+					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " categories from " . implode(",", $oc_product_categories) . " to " . $oc_category_id);
+					$this->model_extension_module_erply->set_product_category($oc_db_product['product_id'], $oc_category_id);
+				}
 
 				if ($oc_db_product['price'] != $oc_product['price']) {
 					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " price from " . $oc_db_product['price'] . " to " . $oc_product['price']);
@@ -305,7 +312,7 @@ class ControllerExtensionModuleErply extends Controller
 
 				$this->add_product_images($erply_product, $oc_db_product['product_id']);
 
-				continue;
+				return;
 			} else {
 				$this->debug("@sync_products invalid mapping for product " . $erply_product['productID'] . ", recreating!");
 				$this->model_extension_module_erply->remove_product_mapping($erply_category['productID']);
@@ -336,9 +343,9 @@ class ControllerExtensionModuleErply extends Controller
 	private function init_erply($user, $password, $client_code)
 	{
 		session_start();
-		$this->load->library('EAPI');
+		$this->load->library('ErplyApi');
 
-		$this->erply = new EAPI();
+		$this->erply = new ErplyApi();
 
 		// Configuration settings
 		$this->erply->username = $user;
@@ -349,7 +356,7 @@ class ControllerExtensionModuleErply extends Controller
 
 	private function check_permissions()
 	{
-		if (!is_cli() && !$this->user->hasPermission('modify', 'extension/module/erply')) {
+		if (!$this->is_cli() && !$this->user->hasPermission('modify', 'extension/module/erply')) {
 			$this->error['warning'] = $this->language->get('error_permission');
 			// TODO: error handling
 			die();
@@ -378,6 +385,78 @@ class ControllerExtensionModuleErply extends Controller
 		}
 
 		return !$this->error;
+	}
+
+	private function init_sync()
+	{
+		$this->load->model('extension/module/erply');
+		$this->load->model('setting/setting');
+		$this->load->model('catalog/category');
+		$this->load->model('catalog/product');
+
+		$this->ensure_module_enabled();
+		$this->check_permissions();
+
+		$this->init_erply(
+			$this->config->get('module_erply_user'),
+			$this->config->get('module_erply_password'),
+			$this->config->get('module_erply_client_code')
+		);
+
+		$this->load->library('OcErplyHelper');
+		$this->erplyHelper = new OcErplyHelper();
+	}
+
+	private function delete_removed_categories()
+	{
+		// TODO
+	}
+
+	private function delete_removed_products()
+	{
+		$erply_mappings = $this->model_extension_module_erply->get_product_mappings();
+		$tracked_erply_ids = array();
+		$erply_to_oc_product_map = array();
+
+		// get locally tracked Erply product ids
+		foreach ($erply_mappings as $mapping) {
+			$tracked_erply_ids[] = $mapping['erply_product_id'];
+			$erply_to_oc_product_map[$mapping['erply_product_id']] = $mapping['oc_product_id'];
+		}
+
+		$erply_ids_chunked = array_chunk($tracked_erply_ids, 1000);
+		$remote_erply_ids = array();
+
+		// get remote Erply product ids
+		foreach ($erply_ids_chunked as $ids_batch) {
+			$erply_response = $this->erply->get_products_simple(0, 1000, $ids_batch);
+
+			if ($erply_response['status']['responseStatus'] == 'error') {
+				throw new Exception("Error in Erply response");
+			}
+
+			foreach ($erply_response['records'] as $erply_product) {
+				$remote_erply_ids[] = $erply_product['productID'];
+			}
+		}
+
+		// check which local Erply ids are not present in remote ids
+		foreach ($tracked_erply_ids as $tracked_erply_id) {
+			if (!in_array($tracked_erply_id, $remote_erply_ids)) {
+				$oc_id = $erply_to_oc_product_map[$tracked_erply_id];
+				$this->debug("@clean deleting mapping for erply product " . $tracked_erply_id . " and settting stock to 0 for OC product " . $oc_id);
+				$this->model_extension_module_erply->remove_product_mapping($tracked_erply_id);
+				$this->model_extension_module_erply->set_product_stock($oc_db_product['product_id'], 0);
+			}
+		}
+	}
+
+	private function ensure_module_enabled()
+	{
+		if (!$this->config->get('module_erply_status')) {
+			// TODO: error handling
+			die();
+		}
 	}
 
 	private function is_cli()

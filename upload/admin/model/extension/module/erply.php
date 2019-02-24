@@ -31,6 +31,11 @@ class ModelExtensionModuleErply extends Model
 		$this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'module_erply'");
 	}
 
+	public function get_product_mappings(){
+		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "erply_oc_product");
+		return $query->rows;
+	}
+
 	public function add_category_mapping($oc_category_id, $erply_category_id, $timestamp)
 	{
 		$this->db->query("INSERT INTO " . DB_PREFIX . "erply_oc_category SET oc_category_id = '" . (int)$oc_category_id . "', erply_category_id = '" . (int)$erply_category_id . "', timestamp = '" . (int)$timestamp . "'");
@@ -60,9 +65,18 @@ class ModelExtensionModuleErply extends Model
 		$query = $this->db->query("DELETE FROM " . DB_PREFIX . "erply_oc_category WHERE erply_category_id = '" . (int)$erply_category_id . "'");
 	}
 
-	public function remove_product_mapping($erply_category_id)
+	public function remove_product_mapping($erply_product_id)
 	{
-		$query = $this->db->query("DELETE FROM " . DB_PREFIX . "erply_oc_category WHERE erply_category_id = '" . (int)$erply_category_id . "'");
+		$query = $this->db->query("DELETE FROM " . DB_PREFIX . "erply_oc_product WHERE erply_product_id = '" . (int)$erply_product_id . "'");
+	}
+
+	public function set_product_category($product_id, $category_id){
+		if (!isset($product_id) || !isset($category_id)) {
+			throw new Exception("Product or category not set.");
+		}
+
+		$this->db->query("DELETE FROM " . DB_PREFIX . "product_to_category WHERE product_id = '" . (int)$product_id . "'");
+		$this->db->query("INSERT INTO " . DB_PREFIX . "product_to_category SET product_id = '" . (int)$product_id . "', category_id = '" . (int)$category_id . "'");
 	}
 
 	public function set_product_price($product_id, $price)

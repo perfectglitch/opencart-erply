@@ -25,6 +25,36 @@ class ErplyApi
 		$this->sslCACertPath = $sslCACertPath;
 	}
 
+	public function get_products_simple($offset = 0, $limit = 1000, $product_ids = null)
+	{
+		return $this->get_products($offset, $limit, 0, 0, $product_ids, null);
+	}
+
+	public function get_products($offset = 0, $limit = 1000, $with_stock = 0, $with_prices = 0, $product_ids = null, $group_id = null)
+	{
+		$options = array(
+
+			'recordsOnPage' => $limit,
+			'recordOffset' => $offset,
+			'displayedInWebshop' => 1,
+			'getStockInfo' => $with_stock,
+			'active' => 1,
+			'getPriceListPrices' => $with_prices,
+			'type' => 'PRODUCT,BUNDLE,ASSEMBLY' // ensures no matrix product parents in response
+			//'getAllLanguages' = 1
+		);
+
+		if ($group_id !== null) {
+			$options['groupID'] = $group_id;
+		}
+
+		if ($product_ids !== null) {
+			$options['productIDs'] = implode(",", $product_ids);
+		}
+
+		return json_decode($this->sendRequest('getProducts', $options), true);
+	}
+
 	public function sendRequest($request, $parameters = array())
 	{
 		//validate that all required parameters are set

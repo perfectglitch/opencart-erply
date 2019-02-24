@@ -12,6 +12,10 @@ For existing products updates:
  * Product price
  * Product stock
  * Product images
+ * Category
+
+ Additional features:
+ * Removes mapping for products that have been removed from Erply and sets stock to 0.
  
 Erply inventory API(system/library/EAPI.php) downloaded from Erply homepage: https://learn-api.erply.com/getting-started/php.
 

@@ -29,7 +29,7 @@ class OcErplyHelper
 			$oc_category['column'] = 1;
 		}
 
-		// 2 languages
+		// TODO: language support
 		$oc_category['category_description'] = array(
 			1 => array(
 				'name' => $erply_category['name'],
@@ -50,7 +50,7 @@ class OcErplyHelper
 		return $oc_category;
 	}
 
-	private function erply_to_oc_product($erply_product, $oc_category_id)
+	public function erply_to_oc_product($erply_product, $oc_category_id)
 	{
 		$oc_product = array(
 			'model' => $erply_product['code'],
@@ -87,6 +87,7 @@ class OcErplyHelper
 
 		$oc_product['product_image'] = array();
 
+		// TODO: language support
 		$oc_product['product_description'] = array(
 			1 => array(
 				'name' => $erply_product['name'],
@@ -109,7 +110,7 @@ class OcErplyHelper
 		return $oc_product;
 	}
 
-	private function download_product_images($erply_product)
+	public function download_product_images($erply_product)
 	{
 		if (!isset($erply_product['images'])) {
 			return array();
@@ -142,7 +143,7 @@ class OcErplyHelper
 		return $images;
 	}
 
-	private function get_category_column_count($sub_category_count)
+	public function get_category_column_count($sub_category_count)
 	{
 		if ($sub_category_count > 30) {
 			$columns = 4;
