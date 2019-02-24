@@ -25,6 +25,17 @@ class ErplyApi
 		$this->sslCACertPath = $sslCACertPath;
 	}
 
+	public function get_categories()
+	{
+		// TODO: add support for multiple languages
+		$options = array(
+			'displayedInWebshop' => 1
+			//'getAllLanguages' => ($all_languages ? 1 : 0)
+		);
+
+		return json_decode($this->sendRequest('getProductGroups', $options), true);
+	}
+
 	public function get_products_simple($offset = 0, $limit = 1000, $product_ids = null)
 	{
 		return $this->get_products($offset, $limit, 0, 0, $product_ids, null);
@@ -33,7 +44,6 @@ class ErplyApi
 	public function get_products($offset = 0, $limit = 1000, $with_stock = 0, $with_prices = 0, $product_ids = null, $group_id = null)
 	{
 		$options = array(
-
 			'recordsOnPage' => $limit,
 			'recordOffset' => $offset,
 			'displayedInWebshop' => 1,
@@ -57,6 +67,10 @@ class ErplyApi
 
 	public function sendRequest($request, $parameters = array())
 	{
+		if (session_status() == PHP_SESSION_NONE) {
+			session_start();
+		}
+		
 		//validate that all required parameters are set
 		if (!$this->url or !$this->clientCode or !$this->username or !$this->password) {
 			throw new Exception('Missing parameters', self::MISSING_PARAMETERS);

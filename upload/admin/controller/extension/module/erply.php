@@ -177,16 +177,7 @@ class ControllerExtensionModuleErply extends Controller
 
 	private function sync_categories()
 	{
-		$categories_response = json_decode(
-			$this->erply->sendRequest(
-				'getProductGroups',
-				array(
-					'displayedInWebshop' => 1
-					//'getAllLanguages' => 1
-				)
-			),
-			true
-		);
+		$categories_response = $this->erply->get_categories();
 
 		if ($categories_response['status']['responseStatus'] == 'error') {
 			throw new Exception("Error in Erply response");
@@ -340,20 +331,6 @@ class ControllerExtensionModuleErply extends Controller
 		$this->model_extension_module_erply->add_product_images($oc_product_id, $images);
 	}
 
-	private function init_erply($user, $password, $client_code)
-	{
-		session_start();
-		$this->load->library('ErplyApi');
-
-		$this->erply = new ErplyApi();
-
-		// Configuration settings
-		$this->erply->username = $user;
-		$this->erply->password = $password;
-		$this->erply->clientCode = $client_code;
-		$this->erply->url = 'https://' . $this->erply->clientCode . '.erply.com/api/';
-	}
-
 	private function check_permissions()
 	{
 		if (!$this->is_cli() && !$this->user->hasPermission('modify', 'extension/module/erply')) {
@@ -397,19 +374,23 @@ class ControllerExtensionModuleErply extends Controller
 		$this->ensure_module_enabled();
 		$this->check_permissions();
 
-		$this->init_erply(
-			$this->config->get('module_erply_user'),
-			$this->config->get('module_erply_password'),
-			$this->config->get('module_erply_client_code')
-		);
-
 		$this->load->library('OcErplyHelper');
 		$this->erplyHelper = new OcErplyHelper();
+
+		// Erply
+		$this->load->library('ErplyApi');
+
+		$username = $this->config->get('module_erply_user');
+		$password = $this->config->get('module_erply_password');
+		$client_code = $this->config->get('module_erply_client_code');
+		$url = 'https://' . $client_code . '.erply.com/api/';
+
+		$this->erply = new ErplyApi($url, $client_code, $username, $password, null);
 	}
 
 	private function delete_removed_categories()
 	{
-		// TODO
+		// TODO:
 	}
 
 	private function delete_removed_products()
