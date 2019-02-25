@@ -306,7 +306,7 @@ class ControllerExtensionModuleErply extends Controller
 				return;
 			} else {
 				$this->debug("@sync_products invalid mapping for product " . $erply_product['productID'] . ", recreating!");
-				$this->model_extension_module_erply->remove_product_mapping($erply_category['productID']);
+				$this->model_extension_module_erply->remove_product_mapping($erply_product['productID']);
 			}
 		}
 
