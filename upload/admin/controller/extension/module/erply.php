@@ -427,7 +427,7 @@ class ControllerExtensionModuleErply extends Controller
 				$oc_id = $erply_to_oc_product_map[$tracked_erply_id];
 				$this->debug("@clean deleting mapping for erply product " . $tracked_erply_id . " and settting stock to 0 for OC product " . $oc_id);
 				$this->model_extension_module_erply->remove_product_mapping($tracked_erply_id);
-				$this->model_extension_module_erply->set_product_stock($tracked_erply_id['product_id'], 0);
+				$this->model_extension_module_erply->set_product_stock($oc_id, 0);
 			}
 		}
 	}
