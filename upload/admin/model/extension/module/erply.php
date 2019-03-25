@@ -132,4 +132,12 @@ class ModelExtensionModuleErply extends Model
 		$this->cache->delete('product');
 	}
 
+	public function update_product_timestamp($product_id, $timestamp){
+		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_product SET timestamp = '" . (int)$timestamp . "' WHERE oc_product_id = '" . (int)$product_id . "'");
+	}
+
+	public function update_category_timestamp($category_id, $timestamp){
+		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_category SET timestamp = '" . (int)$timestamp . "' WHERE oc_category_id = '" . (int)$category_id . "'");
+	}
+
 }

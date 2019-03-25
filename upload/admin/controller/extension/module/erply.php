@@ -10,7 +10,7 @@ class ControllerExtensionModuleErply extends Controller
 	private $erplyHelper;
 
 	private static $sync_lock = 0;
-	private static $debug_enabled = 1;
+	private static $debug_enabled = 0;
 
 	public function install()
 	{
@@ -212,7 +212,7 @@ class ControllerExtensionModuleErply extends Controller
 			$oc_category = $this->erplyHelper->erply_to_oc_category($erply_category, $parent_oc_category_id);
 			$category_id = $this->model_catalog_category->addCategory($oc_category);
 
-			$this->model_extension_module_erply->add_category_mapping($category_id, $erply_category['productGroupID'], $erply_category['lastModified']);
+			$this->model_extension_module_erply->add_category_mapping($category_id, $erply_category['productGroupID'], (int)$erply_category['lastModified']);
 
 			$this->debug("@sync_category created new category " . $erply_category['name'] . " with id " . $category_id);
 		}
@@ -277,44 +277,51 @@ class ControllerExtensionModuleErply extends Controller
 			$oc_db_product = $this->model_catalog_product->getProduct($mapping['oc_product_id']);
 
 			if ($oc_db_product) {
-				$this->debug("@sync_products mapping for product " . $erply_product['productID'] . " already exists, updating product!");
+				$this->debug("@sync_product mapping for product " . $erply_product['productID'] . " already exists, updating product!");
+				
+				if((int)$mapping['timestamp'] == (int)$erply_product['lastModified']){
+					$this->debug("@sync_product product " . $oc_db_product['product_id'] . " already up to date!");
+					return;
+				}
 
 				$oc_product_categories = $this->model_catalog_product->getProductCategories($oc_db_product['product_id']);
 				if (!in_array($oc_category_id, $oc_product_categories)) {
 					// TODO: support multiple categories
-					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " categories from " . implode(",", $oc_product_categories) . " to " . $oc_category_id);
+					$this->debug("@sync_product updating product " . $oc_db_product['product_id'] . " categories from " . implode(",", $oc_product_categories) . " to " . $oc_category_id);
 					$this->model_extension_module_erply->set_product_category($oc_db_product['product_id'], $oc_category_id);
 				}
 
 				if ($oc_db_product['price'] != $oc_product['price']) {
-					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " price from " . $oc_db_product['price'] . " to " . $oc_product['price']);
+					$this->debug("@sync_product updating product " . $oc_db_product['product_id'] . " price from " . $oc_db_product['price'] . " to " . $oc_product['price']);
 					$this->model_extension_module_erply->set_product_price($oc_db_product['product_id'], $oc_product['price']);
 				}
 
 				if ($oc_db_product['quantity'] != $oc_product['quantity']) {
-					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " quantity from " . $oc_db_product['quantity'] . " to " . $oc_product['quantity']);
+					$this->debug("@sync_product updating product " . $oc_db_product['product_id'] . " quantity from " . $oc_db_product['quantity'] . " to " . $oc_product['quantity']);
 					$this->model_extension_module_erply->set_product_stock($oc_db_product['product_id'], $oc_product['quantity']);
 				}
 
 				if ($oc_db_product['stock_status_id'] != $oc_product['stock_status_id']) {
-					$this->debug("@sync_products updating product " . $oc_db_product['product_id'] . " stock_status_id from " . $oc_db_product['stock_status_id'] . " to " . $oc_product['stock_status_id']);
+					$this->debug("@sync_product updating product " . $oc_db_product['product_id'] . " stock_status_id from " . $oc_db_product['stock_status_id'] . " to " . $oc_product['stock_status_id']);
 					$this->model_extension_module_erply->set_product_stock_status($oc_db_product['product_id'], $oc_product['stock_status_id']);
 				}
 
 				$this->add_product_images($erply_product, $oc_db_product['product_id']);
 
+				$this->model_extension_module_erply->update_product_timestamp($oc_db_product['product_id'], (int)$erply_product['lastModified']);
+
 				return;
 			} else {
-				$this->debug("@sync_products invalid mapping for product " . $erply_product['productID'] . ", recreating!");
+				$this->debug("@sync_product invalid mapping for product " . $erply_product['productID'] . ", recreating!");
 				$this->model_extension_module_erply->remove_product_mapping($erply_product['productID']);
 			}
 		}
 
-		$this->debug("@sync_products creating product " . $erply_product['name'] . " with model " . $erply_product['code']);
+		$this->debug("@sync_product creating product " . $erply_product['name'] . " with model " . $erply_product['code']);
 
 		$oc_product_id = $this->model_catalog_product->addProduct($oc_product);
 
-		$this->model_extension_module_erply->add_product_mapping($oc_product_id, $erply_product['productID'], $erply_product['lastModified']);
+		$this->model_extension_module_erply->add_product_mapping($oc_product_id, $erply_product['productID'], (int)$erply_product['lastModified']);
 		$this->add_product_images($erply_product, $oc_product_id);
 	}
 
