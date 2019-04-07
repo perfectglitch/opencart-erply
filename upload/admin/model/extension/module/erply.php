@@ -31,7 +31,8 @@ class ModelExtensionModuleErply extends Model
 		$this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'module_erply'");
 	}
 
-	public function get_product_mappings(){
+	public function get_product_mappings()
+	{
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "erply_oc_product");
 		return $query->rows;
 	}
@@ -70,7 +71,8 @@ class ModelExtensionModuleErply extends Model
 		$query = $this->db->query("DELETE FROM " . DB_PREFIX . "erply_oc_product WHERE erply_product_id = '" . (int)$erply_product_id . "'");
 	}
 
-	public function set_product_category($product_id, $category_id){
+	public function set_product_category($product_id, $category_id)
+	{
 		if (!isset($product_id) || !isset($category_id)) {
 			throw new Exception("Product or category not set.");
 		}
@@ -114,30 +116,30 @@ class ModelExtensionModuleErply extends Model
 
 	public function add_product_images($product_id, $images)
 	{
-		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product_image WHERE product_id = '" . (int)$product_id . "' ORDER BY sort_order ASC");
+		$this->db->query("DELETE FROM " . DB_PREFIX . "product_image WHERE product_id = '" . (int)$product_id . "'");
 
-		$db_images = $query->rows;
-
+		$first = true;
 		foreach ($images as $image) {
-			// Check if image already exists
-			foreach ($db_images as $db_image) {
-				if ($db_image['image'] == $image) {
-					continue 2;
-				}
-			}
 
-			$this->db->query("INSERT INTO " . DB_PREFIX . "product_image SET product_id = '" . (int)$product_id . "', image = '" . $this->db->escape($image) . "', sort_order = '" . 0 . "'");
+			if ($first) {
+				// Update primary image
+				$first = false;
+				$this->db->query("UPDATE " . DB_PREFIX . "product SET image = '" . $this->db->escape($image) . "' WHERE product_id = '" . (int)$product_id . "'");
+			} else {
+				$this->db->query("INSERT INTO " . DB_PREFIX . "product_image SET product_id = '" . (int)$product_id . "', image = '" . $this->db->escape($image) . "', sort_order = '" . 0 . "'");
+			}
 		}
 
 		$this->cache->delete('product');
 	}
 
-	public function update_product_timestamp($product_id, $timestamp){
+	public function update_product_timestamp($product_id, $timestamp)
+	{
 		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_product SET timestamp = '" . (int)$timestamp . "' WHERE oc_product_id = '" . (int)$product_id . "'");
 	}
 
-	public function update_category_timestamp($category_id, $timestamp){
+	public function update_category_timestamp($category_id, $timestamp)
+	{
 		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_category SET timestamp = '" . (int)$timestamp . "' WHERE oc_category_id = '" . (int)$category_id . "'");
 	}
-
 }
