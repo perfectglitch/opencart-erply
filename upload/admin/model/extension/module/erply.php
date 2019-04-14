@@ -37,6 +37,12 @@ class ModelExtensionModuleErply extends Model
 		return $query->rows;
 	}
 
+	public function get_category_mappings()
+	{
+		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "erply_oc_category");
+		return $query->rows;
+	}
+
 	public function add_category_mapping($oc_category_id, $erply_category_id, $timestamp)
 	{
 		$this->db->query("INSERT INTO " . DB_PREFIX . "erply_oc_category SET oc_category_id = '" . (int)$oc_category_id . "', erply_category_id = '" . (int)$erply_category_id . "', timestamp = '" . (int)$timestamp . "'");
@@ -141,5 +147,9 @@ class ModelExtensionModuleErply extends Model
 	public function update_category_timestamp($category_id, $timestamp)
 	{
 		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_category SET timestamp = '" . (int)$timestamp . "' WHERE oc_category_id = '" . (int)$category_id . "'");
+	}
+
+	public function disable_category($category_id){
+		$this->db->query("UPDATE " . DB_PREFIX . "category SET status = 0 WHERE category_id = '" . (int)$category_id . "'");
 	}
 }

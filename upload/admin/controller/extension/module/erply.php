@@ -10,7 +10,7 @@ class ControllerExtensionModuleErply extends Controller
 	private $erplyHelper;
 
 	private static $sync_lock = 0;
-	private static $debug_enabled = 0;
+	private static $debug_enabled = 1;
 
 	public function install()
 	{
@@ -168,29 +168,24 @@ class ControllerExtensionModuleErply extends Controller
 
 			$this->delete_removed_categories();
 			$this->delete_removed_products();
-			$this->sync_categories();
-		}
-		finally {
+
+			$this->sync_categories_and_products();
+		} finally {
+
 			$this->sync_lock = 0;
 		}
 	}
 
-	private function sync_categories()
+	private function sync_categories_and_products()
 	{
-		$categories_response = $this->erply->get_categories();
+		$categories = $this->erply->get_categories();
 
-		if ($categories_response['status']['responseStatus'] == 'error') {
-			throw new Exception("Error in Erply response");
-		}
-
-		$erply_categories = $categories_response['records'];
-
-		foreach ($erply_categories as $erply_category) {
-			$this->sync_category($erply_category, null);
+		foreach ($categories as $category) {
+			$this->sync_category_recursive($category);
 		}
 	}
 
-	private function sync_category($erply_category, $parent_oc_category_id)
+	private function sync_category_recursive($erply_category, $parent_oc_category_id = null)
 	{
 		$this->debug("@sync_category handling category " . $erply_category['name'] . " with parent " . $parent_oc_category_id);
 
@@ -198,27 +193,35 @@ class ControllerExtensionModuleErply extends Controller
 
 		// check if mapping exists and remove it if existing mapping is invalid
 		if ($mapping) {
+			$oc_category = $this->erplyHelper->erply_to_oc_category($erply_category, $parent_oc_category_id);
 			$oc_db_category = $this->model_catalog_category->getCategory($mapping['oc_category_id']);
 
 			if ($oc_db_category) {
 				$category_id = $mapping['oc_category_id'];
 			} else {
+				// category removed from OC but present in Erply
 				$this->model_extension_module_erply->remove_category_mapping($erply_category['productGroupID']);
 			}
 		}
 
-		// create new category with mapping
 		if (!isset($category_id)) {
+			// create new category with mapping
 			$oc_category = $this->erplyHelper->erply_to_oc_category($erply_category, $parent_oc_category_id);
 			$category_id = $this->model_catalog_category->addCategory($oc_category);
-
 			$this->model_extension_module_erply->add_category_mapping($category_id, $erply_category['productGroupID'], (int)$erply_category['lastModified']);
+			$mapping = $this->model_extension_module_erply->find_category_mapping_by_erply_id($erply_category['productGroupID']);
 
 			$this->debug("@sync_category created new category " . $erply_category['name'] . " with id " . $category_id);
 		}
 
 		// sync products and sub-categories
 		if (isset($category_id)) {
+			// update category data if needed
+			if ((int)$mapping['timestamp'] < (int)$erply_category['lastModified']) {
+				$this->model_catalog_category->editCategory($category_id, $oc_category);
+				$this->model_extension_module_erply->update_category_timestamp($category_id, (int)$erply_category['lastModified']);
+			}
+
 			$this->sync_products($erply_category['productGroupID'], $category_id);
 
 			if (!empty($erply_category['subGroups'])) {
@@ -278,10 +281,14 @@ class ControllerExtensionModuleErply extends Controller
 
 			if ($oc_db_product) {
 				$this->debug("@sync_product mapping for product " . $erply_product['productID'] . " already exists, updating product!");
-				
-				if((int)$mapping['timestamp'] == (int)$erply_product['lastModified']){
+
+				if ((int)$mapping['timestamp'] == (int)$erply_product['lastModified']) {
 					$this->debug("@sync_product product " . $oc_db_product['product_id'] . " already up to date!");
 					return;
+				}
+
+				if ((int)$erply_product['displayedInWebshop'] == 0) {
+					$this->model_extension_module_erply->set_product_stock($oc_db_product['product_id'], 0);
 				}
 
 				$oc_product_categories = $this->model_catalog_product->getProductCategories($oc_db_product['product_id']);
@@ -314,6 +321,10 @@ class ControllerExtensionModuleErply extends Controller
 			} else {
 				$this->debug("@sync_product invalid mapping for product " . $erply_product['productID'] . ", recreating!");
 				$this->model_extension_module_erply->remove_product_mapping($erply_product['productID']);
+			}
+		} else {
+			if ((int)$erply_product['displayedInWebshop'] == 0) {
+				return;
 			}
 		}
 
@@ -397,7 +408,29 @@ class ControllerExtensionModuleErply extends Controller
 
 	private function delete_removed_categories()
 	{
-		// TODO:
+		$remote_ids = $this->erply->get_category_ids();
+		$erply_mappings = $this->model_extension_module_erply->get_category_mappings();
+		$tracked_erply_ids = array();
+		$erply_to_oc_category_map = array();
+
+		// get locally tracked Erply product ids
+		foreach ($erply_mappings as $mapping) {
+			$tracked_erply_ids[] = $mapping['erply_category_id'];
+			$erply_to_oc_category_map[$mapping['erply_category_id']] = $mapping['oc_category_id'];
+		}
+
+		$this->debug("@delete_removed_categories local ids: " . print_r($tracked_erply_ids, true));
+		$this->debug("@delete_removed_categories remote ids: " . print_r($remote_ids, true));
+
+		// check which local Erply ids are not present in remote ids
+		foreach ($tracked_erply_ids as $tracked_erply_id) {
+			if (!in_array($tracked_erply_id, $remote_ids)) {
+				$oc_id = $erply_to_oc_category_map[$tracked_erply_id];
+				$this->debug("@delete_removed_categories deleting mapping for erply category " . $tracked_erply_id . " mapped to OC category " . $oc_id);
+				$this->model_extension_module_erply->remove_category_mapping($tracked_erply_id);
+				$this->model_extension_module_erply->disable_category($oc_id);
+			}
+		}
 	}
 
 	private function delete_removed_products()
@@ -432,7 +465,7 @@ class ControllerExtensionModuleErply extends Controller
 		foreach ($tracked_erply_ids as $tracked_erply_id) {
 			if (!in_array($tracked_erply_id, $remote_erply_ids)) {
 				$oc_id = $erply_to_oc_product_map[$tracked_erply_id];
-				$this->debug("@clean deleting mapping for erply product " . $tracked_erply_id . " and settting stock to 0 for OC product " . $oc_id);
+				$this->debug("@delete_removed_products deleting mapping for erply product " . $tracked_erply_id . " and settting stock to 0 for OC product " . $oc_id);
 				$this->model_extension_module_erply->remove_product_mapping($tracked_erply_id);
 				$this->model_extension_module_erply->set_product_stock($oc_id, 0);
 			}
