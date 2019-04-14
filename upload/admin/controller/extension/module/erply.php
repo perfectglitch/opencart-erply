@@ -187,7 +187,7 @@ class ControllerExtensionModuleErply extends Controller
 
 	private function sync_category_recursive($erply_category, $parent_oc_category_id = null)
 	{
-		$this->debug("@sync_category handling category " . $erply_category['name'] . " with parent " . $parent_oc_category_id);
+		$this->debug("@sync_category_recursive handling category " . $erply_category['name'] . " with parent " . $parent_oc_category_id);
 
 		$mapping = $this->model_extension_module_erply->find_category_mapping_by_erply_id($erply_category['productGroupID']);
 
@@ -211,7 +211,7 @@ class ControllerExtensionModuleErply extends Controller
 			$this->model_extension_module_erply->add_category_mapping($category_id, $erply_category['productGroupID'], (int)$erply_category['lastModified']);
 			$mapping = $this->model_extension_module_erply->find_category_mapping_by_erply_id($erply_category['productGroupID']);
 
-			$this->debug("@sync_category created new category " . $erply_category['name'] . " with id " . $category_id);
+			$this->debug("@sync_category_recursive created new category " . $erply_category['name'] . " with id " . $category_id);
 		}
 
 		// sync products and sub-categories
@@ -226,7 +226,7 @@ class ControllerExtensionModuleErply extends Controller
 
 			if (!empty($erply_category['subGroups'])) {
 				foreach ($erply_category['subGroups'] as $erply_sub_category) {
-					$this->sync_category($erply_sub_category, $category_id);
+					$this->sync_category_recursive($erply_sub_category, $category_id);
 				}
 			}
 		} else {
