@@ -19,7 +19,7 @@ For tracked products updates:
  
 Additional features:
 * Disables removed categories and ones that are not marked to be shown in webshop(Erply).
-* Sets product stock to 0 when it's removed from Erply or marked as hidden from webshop.
+* Sets product stock to 0 when it's removed from Erply or not marked to be shown in webshop(Erply).
 
 Erply inventory API(system/library/EAPI.php) downloaded from Erply homepage: https://learn-api.erply.com/getting-started/php.
 
