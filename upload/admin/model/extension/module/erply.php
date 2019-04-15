@@ -120,6 +120,17 @@ class ModelExtensionModuleErply extends Model
 		$this->cache->delete('product');
 	}
 
+	public function set_product_status($product_id, $status)
+	{
+		if (!isset($status) || !isset($product_id)) {
+			return;
+		}
+
+		$query = $this->db->query("UPDATE " . DB_PREFIX . "product SET status = '" . (int)$status . "' WHERE product_id = '" . (int)$product_id . "'");
+
+		$this->cache->delete('product');
+	}
+
 	public function add_product_images($product_id, $images)
 	{
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_image WHERE product_id = '" . (int)$product_id . "'");
@@ -149,7 +160,12 @@ class ModelExtensionModuleErply extends Model
 		$query = $this->db->query("UPDATE " . DB_PREFIX . "erply_oc_category SET timestamp = '" . (int)$timestamp . "' WHERE oc_category_id = '" . (int)$category_id . "'");
 	}
 
-	public function disable_category($category_id){
-		$this->db->query("UPDATE " . DB_PREFIX . "category SET status = 0 WHERE category_id = '" . (int)$category_id . "'");
+	public function set_category_status($category_id, $status)
+	{
+		if (!isset($status) || !isset($category_id)) {
+			return;
+		}
+
+		$this->db->query("UPDATE " . DB_PREFIX . "category SET status = " . (int)$status . " WHERE category_id = '" . (int)$category_id . "'");
 	}
 }
