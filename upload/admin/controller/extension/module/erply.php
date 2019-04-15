@@ -425,16 +425,17 @@ class ControllerExtensionModuleErply extends Controller
 
 		// check which local Erply ids are not present in remote ids
 		foreach ($tracked_erply_ids as $tracked_erply_id) {
+
+			$oc_id = $erply_to_oc_category_map[$tracked_erply_id];
+
 			if (!in_array($tracked_erply_id, $remote_ids)) {
-				$oc_id = $erply_to_oc_category_map[$tracked_erply_id];
-				$this->log->write("@delete_removed_categories deleting mapping for erply category " . $tracked_erply_id . " and disabling category " . $oc_id);
-				$this->model_extension_module_erply->remove_category_mapping($tracked_erply_id);
+				$this->log->write("@delete_removed_categories missing erply category " . $tracked_erply_id . ", disabling OC category " . $oc_id);
 				$this->model_extension_module_erply->set_category_status($oc_id, 0);
 			} else {
 				// check if tracked category is removed locally
-				$tracked_oc_category = $this->model_catalog_product->getCategory($oc_id);
+				$tracked_oc_category = $this->model_catalog_category->getCategory($oc_id);
 				if (!isset($tracked_oc_category) || !isset($tracked_oc_category['category_id'])) {
-					$this->log->write("@delete_removed_categories removing mapping for deleted category " . $oc_id);
+					$this->log->write("@delete_removed_categories removing mapping for deleted category " . $tracked_erply_id);
 					$this->model_extension_module_erply->remove_category_mapping($tracked_erply_id);
 				}
 			}
@@ -471,10 +472,11 @@ class ControllerExtensionModuleErply extends Controller
 
 		// check which local Erply ids are not present in remote ids
 		foreach ($tracked_erply_ids as $tracked_erply_id) {
+
 			$oc_id = $erply_to_oc_product_map[$tracked_erply_id];
+
 			if (!in_array($tracked_erply_id, $remote_erply_ids)) {
-				$this->log->write("@delete_removed_products deleting mapping for erply product " . $tracked_erply_id . " and disabling OC product " . $oc_id);
-				$this->model_extension_module_erply->remove_product_mapping($tracked_erply_id);
+				$this->log->write("@delete_removed_products missing erply product " . $tracked_erply_id . ", disabling OC product " . $oc_id);
 				$this->model_extension_module_erply->set_product_status($oc_id, 0);
 			} else {
 				// check if tracked product is removed locally
