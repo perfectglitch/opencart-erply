@@ -164,10 +164,10 @@ class ControllerExtensionModuleErply extends Controller
 		try {
 			$this->init_sync();
 
-			$this->erplyService->delete_removed_categories();
-			$this->erplyService->delete_removed_products();
-
-			$this->erplyService->sync_categories_and_products();
+			$this->OcErplyService->delete_removed_categories();
+			$this->OcErplyService->delete_removed_products();
+			$this->OcErplyService->sync_categories_and_products();
+			
 		} finally {
 
 			$this->sync_lock = 0;
@@ -220,25 +220,7 @@ class ControllerExtensionModuleErply extends Controller
 		$this->check_permissions();
 
 		// Erply
-		$this->load->library('ErplyClient');
-		$this->load->library('OcErplyHelper');
 		$this->load->library('OcErplyService');
-
-		$username = $this->config->get('module_erply_user');
-		$password = $this->config->get('module_erply_password');
-		$client_code = $this->config->get('module_erply_client_code');
-		$url = 'https://' . $client_code . '.erply.com/api/';
-
-		$erplyClient = new ErplyClient($url, $client_code, $username, $password, null);
-		$erplyHelper = new OcErplyHelper();
-
-		$this->erplyService = new OcErplyService(
-			$erplyClient,
-			$erplyHelper,
-			$this->model_catalog_product,
-			$this->model_catalog_category,
-			$this->model_extension_module_erply
-		);
 	}
 
 	private function ensure_module_enabled()

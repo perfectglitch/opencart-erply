@@ -3,9 +3,11 @@ class OcErplyHelper
 {
 	private static $file_prefix = "ERPLY_IMAGE";
 
-	public function __construct()
-	{
+	private $registry;
 
+	public function __construct($registry)
+	{
+		$this->registry = $registry;
 	}
 
 	public function erply_to_oc_category($erply_category, $parent_id)

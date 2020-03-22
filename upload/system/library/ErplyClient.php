@@ -16,13 +16,21 @@ class ErplyClient
 	private $password;
 	private $sslCACertPath;
 
-	public function __construct($url = null, $clientCode = null, $username = null, $password = null, $sslCACertPath = null)
+	private $registry;
+
+	public function __construct($registry)
 	{
-		$this->url = $url;
-		$this->clientCode = $clientCode;
-		$this->username = $username;
-		$this->password = $password;
-		$this->sslCACertPath = $sslCACertPath;
+		$this->registry = $registry;
+
+		$this->sslCACertPath = null;
+		$this->clientCode = $this->config->get('module_erply_client_code');
+		$this->username = $this->config->get('module_erply_user');
+		$this->password = $this->config->get('module_erply_password');
+		$this->url = 'https://' . $this->clientCode . '.erply.com/api/';
+	}
+
+	public function __get($name) {
+		return $this->registry->get($name);
 	}
 
 	public function get_categories($excludeDisabled = 0)
