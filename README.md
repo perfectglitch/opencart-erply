@@ -18,8 +18,7 @@ For tracked products updates:
  * parent category
  
 Additional features:
-* Disables removed categories and ones that are not marked to be shown in webshop(Erply).
-* Sets product stock to 0 when it's removed from Erply or not marked to be shown in webshop(Erply).
+* Disables removed or hidden products and categories.
 
 Erply inventory API(system/library/EAPI.php) downloaded from Erply homepage: https://learn-api.erply.com/getting-started/php.
 

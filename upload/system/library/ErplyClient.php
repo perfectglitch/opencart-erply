@@ -3,18 +3,18 @@
 /**
  * API helper provided by Erply.
  */
-class ErplyApi
+class ErplyClient
 {
 	const VERIFY_USER_FAILURE = 2001;
 	const CURL_ERROR = 2002;
 	const PHP_SESSION_NOT_STARTED = 2003;
 	const MISSING_PARAMETERS = 2004;
 
-	public $url;
-	public $clientCode;
-	public $username;
-	public $password;
-	public $sslCACertPath;
+	private $url;
+	private $clientCode;
+	private $username;
+	private $password;
+	private $sslCACertPath;
 
 	public function __construct($url = null, $clientCode = null, $username = null, $password = null, $sslCACertPath = null)
 	{
