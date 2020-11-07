@@ -1,7 +1,10 @@
-# OpenCart-Erply synchronization
+# OpenCart-Erply integration
 
 ## About
-An experimental unidirectional synchronization module for OpenCart to fetch categories, products and images from Erply.
+
+Integration module for OpenCart to fetch categories, products and images from Erply.  
+Allows you to sync products with images and categories from Erply to OpenCart.  
+Supports both manual and periodic sync (using cron jobs with PHP CLI).  
 
 Initially creates:
  * categories
@@ -23,6 +26,17 @@ Additional features:
 Erply inventory API(system/library/EAPI.php) downloaded from Erply homepage: https://learn-api.erply.com/getting-started/php.
 
 OC versions tested: 3.0.2.0
+
+## Installation
+
+1. Upload files to your OpenCart installation via FTP.  
+2. Enable Erply module through administration, i.e www.your-shop.com/admin.  
+3. Navigate to Extensions -> Modules.  
+4. Enable Erply module.  
+5. Edit module settings and enter your Erply Client Code, username and password.  
+6. Run sync from module settings page or use cron jobs to do that for you automatically.
+
+
 
 ## Usage
 
