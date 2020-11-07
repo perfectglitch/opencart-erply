@@ -36,7 +36,7 @@ OC versions tested: 3.0.2.0
 5. Edit module settings and enter your Erply Client Code, username and password.  
 6. Run sync from module settings page or use cron jobs to do that for you automatically.
 
-
+![Erply module settings page](https://github.com/perfectglitch/opencart-erply-sync/blob/develop/configure_module.jpg)
 
 ## Usage
 
