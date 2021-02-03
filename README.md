@@ -1,4 +1,4 @@
-# OpenCart-Erply integration
+# OpenCart Erply integration
 
 ## About
 
